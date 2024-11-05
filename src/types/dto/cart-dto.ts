@@ -1,11 +1,9 @@
-import { Cart, CartProduct } from "@prisma/client";
-
 export interface CreateCartDTO {
     userId: number;
 }
 
 export interface AddProductToCartDTO {
-    cartId: number;
+    userId: number;
     productId: number;
     quantity: number;
 }

@@ -1,13 +1,12 @@
-import express from "express";
-import * as cartControllers from "../controller/cart";
+// src/routes/cartRoutes.ts
+import express from 'express';
+import { addProductToCartController, updateProductQuantityController, clearCartController, getUserCartController } from "../controller/cart";
 
 const cartRouter = express.Router();
 
-cartRouter.post("/", cartControllers.createCart);
-cartRouter.get("/:userId", cartControllers.findCartByUserId);
-cartRouter.post("/add-product", cartControllers.addProductToCart);
-cartRouter.put("/update-product", cartControllers.updateProductQuantity);
-cartRouter.put("/calculate-total/:cartId", cartControllers.calculateTotalPrice);
-cartRouter.delete("/:cartId", cartControllers.clearCart);
+cartRouter.post('/add-product', addProductToCartController);
+cartRouter.put('/update-quantity', updateProductQuantityController);
+cartRouter.delete('/clear-cart/:cartId', clearCartController);
+cartRouter.get('/get-cart', getUserCartController);
 
 export default cartRouter;

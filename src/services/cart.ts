@@ -1,26 +1,26 @@
-import * as cartRepositories from "../repositories/cart-repo";
-import { CreateCartDTO, AddProductToCartDTO, UpdateProductQuantityDTO } from "../types/dto/cart-dto";
 
-export const createCart = async (data: CreateCartDTO) => {
-    return await cartRepositories.createCart(data);
+import * as cartRepository from "../repositories/cart-repo";
+import { CreateCartDTO, AddProductToCartDTO, UpdateProductQuantityDTO, CartDetailsDTO } from "../types/dto/cart-dto";
+
+export const addProductToCart = async (data: AddProductToCartDTO): Promise<CartDetailsDTO> => {
+    const cartDetails = await cartRepository.addProductToCart(data);
+
+    if (!cartDetails) {
+        throw new Error('Failed to add product to cart');
+    }
+
+    return cartDetails;
 };
 
-export const findCartByUserId = async (userId: number) => {
-    return await cartRepositories.findCartByUserId(userId);
+
+export const updateProductQuantity = async (data: UpdateProductQuantityDTO): Promise<CartDetailsDTO | null> => {
+    return cartRepository.updateProductQuantity(data);
 };
 
-export const addProductToCart = async (data: AddProductToCartDTO) => {
-    return await cartRepositories.addProductToCart(data);
+export const clearUserCart = async (cartId: number): Promise<CartDetailsDTO | null> => {
+    return cartRepository.clearCart(cartId);
 };
 
-export const updateProductQuantity = async (data: UpdateProductQuantityDTO) => {
-    return await cartRepositories.updateProductQuantity(data);
-};
-
-export const calculateTotalPrice = async (cartId: number) => {
-    return await cartRepositories.calculateTotalPrice(cartId);
-};
-
-export const clearCart = async (cartId: number) => {
-    return await cartRepositories.clearCart(cartId);
+export const getUserCart = async (userId: number): Promise<CartDetailsDTO | null> => {
+    return cartRepository.getCartByUserId(userId);
 };

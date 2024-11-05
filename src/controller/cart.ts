@@ -1,84 +1,68 @@
-import { Request, Response } from "express";
-import * as cartServices from "../services/cart";
-import { CreateCartDTO, AddProductToCartDTO, UpdateProductQuantityDTO } from "../types/dto/cart-dto";
+import { Request, Response } from 'express';
+import * as cartService from "../services/cart";
+import { AddProductToCartDTO, UpdateProductQuantityDTO } from '../types/dto/cart-dto';
 
-export const createCart = async (req: Request, res: Response) => {
+export const addProductToCartController = async (req: Request, res: Response) => {
+    const userId = res.locals.user.id;
+    const { productId, quantity } = req.body;
+
+    const productData: AddProductToCartDTO = {
+        userId,
+        productId: Number(productId),
+        quantity: Number(quantity),
+    };
+
     try {
-        const data: CreateCartDTO = req.body;
-        const newCart = await cartServices.createCart(data);
-
-        res.json(newCart);
+        const cart = await cartService.addProductToCart(productData);
+        res.status(200).json(cart);
     } catch (error) {
-        console.log(error)
-        const err = error as Error
-        res.status(500).json({ message: err.message })
+        res.status(500).json({ message: 'Error adding product to cart', error });
     }
 };
 
-export const findCartByUserId = async (req: Request, res: Response) => {
-    try {
-        const userId = Number(req.params.userId);
-        const cart = await cartServices.findCartByUserId(userId);
 
-        if (!cart) {
-            res.status(404).json({ message: "Cart not found." });
-        }
-
-        res.json(cart);
-    } catch (error) {
-        console.log(error)
-        const err = error as Error
-        res.status(500).json({ message: err.message })
-    }
-};
-
-export const addProductToCart = async (req: Request, res: Response) => {
-    try {
-        const data: AddProductToCartDTO = req.body;
-        const updatedCart = await cartServices.addProductToCart(data);
-
-        res.json(updatedCart);
-    } catch (error) {
-        console.log(error)
-        const err = error as Error
-        res.status(500).json({ message: err.message })
-    }
-};
-
-export const updateProductQuantity = async (req: Request, res: Response) => {
+export const updateProductQuantityController = async (req: Request, res: Response) => {
     try {
         const data: UpdateProductQuantityDTO = req.body;
-        const updatedCart = await cartServices.updateProductQuantity(data);
 
-        res.json(updatedCart);
+        data.cartId = Number(data.cartId);
+        data.productId = Number(data.productId);
+        data.quantity = Number(data.quantity);
+
+        const cart = await cartService.updateProductQuantity(data);
+        res.status(200).json(cart);
     } catch (error) {
-        console.log(error)
-        const err = error as Error
-        res.status(500).json({ message: err.message })
+        if (error instanceof Error && error.message.includes("not found in cart")) {
+            res.status(404).json({ message: error.message });
+        } else {
+            res.status(500).json({ message: "Error updating product quantity", error });
+        }
     }
 };
 
-export const calculateTotalPrice = async (req: Request, res: Response) => {
-    try {
-        const cartId = Number(req.params.cartId);
-        const totalPrice = await cartServices.calculateTotalPrice(cartId);
 
-        res.json(totalPrice);
+export const clearCartController = async (req: Request, res: Response) => {
+    const { cartId } = req.params;
+
+    try {
+        const cart = await cartService.clearUserCart(Number(cartId));
+        res.status(200).json(cart);
     } catch (error) {
-        console.log(error)
-        const err = error as Error
-        res.status(500).json({ message: err.message })
+        res.status(500).json({ message: 'Error clearing cart', error });
     }
 };
 
-export const clearCart = async (req: Request, res: Response) => {
+export const getUserCartController = async (req: Request, res: Response) => {
     try {
-        const cartId = Number(req.params.cartId);
-        const updatedCart = await cartServices.clearCart(cartId);
-        res.json(updatedCart);
+        const userId = res.locals.user.id
+
+        const cart = await cartService.getUserCart(userId);
+        if (cart) {
+            res.status(200).json(cart);
+        } else {
+            res.status(404).json({ message: "Cart not found" });
+        }
     } catch (error) {
-        console.log(error)
-        const err = error as Error
-        res.status(500).json({ message: err.message })
+        res.status(500).json({ message: 'Error retrieving cart', error });
     }
 };

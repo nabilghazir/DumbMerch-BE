@@ -6,8 +6,7 @@ export interface ProductDTO {
     desc: string;
     stock: number;
     price: number;
-    categoryId: number;
-    category: CategoryDTO;
+    categoryName: string;
     productImages?: ProductImages[];
 }
 

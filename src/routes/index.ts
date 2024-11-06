@@ -5,6 +5,7 @@ import profileRouter from './profile';
 import categoryRouter from './category';
 import productRouter from './product';
 import cartRouter from './cart';
+import transactionRouter from './transaction';
 
 const router = Router();
 
@@ -17,5 +18,6 @@ router.use("/profile", authentication, profileRouter)
 router.use("/category", authentication, categoryRouter)
 router.use("/product", authentication, productRouter)
 router.use("/cart", authentication, cartRouter)
+router.use("/transaction", authentication, transactionRouter)
 
 export default router

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import * as cartService from "../services/cart";
 import { AddProductToCartDTO, UpdateProductQuantityDTO } from '../types/dto/cart-dto';
 
+// Controller to add a product to the cart
 export const addProductToCartController = async (req: Request, res: Response) => {
     const userId = res.locals.user.id;
     const { productId, quantity } = req.body;
@@ -20,11 +21,10 @@ export const addProductToCartController = async (req: Request, res: Response) =>
     }
 };
 
-
+// Controller to update product quantity in the cart
 export const updateProductQuantityController = async (req: Request, res: Response) => {
     try {
         const data: UpdateProductQuantityDTO = req.body;
-
         data.cartId = Number(data.cartId);
         data.productId = Number(data.productId);
         data.quantity = Number(data.quantity);
@@ -40,29 +40,36 @@ export const updateProductQuantityController = async (req: Request, res: Respons
     }
 };
 
-
+// Controller to clear the cart
 export const clearCartController = async (req: Request, res: Response) => {
-    const { cartId } = req.params;
+    const cartId = Number(req.params.cartId);
 
     try {
-        const cart = await cartService.clearUserCart(Number(cartId));
-        res.status(200).json(cart);
+        const updatedCart = await cartService.clearUserCart(cartId);
+        res.status(200).json(updatedCart);
     } catch (error) {
-        res.status(500).json({ message: 'Error clearing cart', error });
+        res.status(500).json({ message: "Error clearing cart", error });
     }
 };
 
+// Controller to get user cart
 export const getUserCartController = async (req: Request, res: Response) => {
-    try {
-        const userId = res.locals.user.id
+    const userId = res.locals.user.id;
 
+    try {
         const cart = await cartService.getUserCart(userId);
-        if (cart) {
-            res.status(200).json(cart);
-        } else {
-            res.status(404).json({ message: "Cart not found" });
-        }
+        res.status(200).json(cart);
     } catch (error) {
-        res.status(500).json({ message: 'Error retrieving cart', error });
+        res.status(500).json({ message: "Error fetching cart", error });
+    }
+};
+
+// Controller to get all carts
+export const getAllCartsController = async (req: Request, res: Response) => {
+    try {
+        const carts = await cartService.getAllCarts();
+        res.status(200).json(carts);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching carts", error });
     }
 };

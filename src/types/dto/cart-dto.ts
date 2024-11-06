@@ -17,7 +17,9 @@ export interface UpdateProductQuantityDTO {
 export interface CartItemDTO {
     productId: number;
     name: string;
+    stock: number;
     price: number;
+    image: string;
     quantity: number;
 }
 

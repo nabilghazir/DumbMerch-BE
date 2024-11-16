@@ -1,8 +1,7 @@
-// src/routes/cartRoutes.ts
-import express from 'express';
+import { Router } from "express";
 import { addProductToCartController, updateProductQuantityController, clearCartController, getUserCartController, getAllCartsController } from "../controller/cart";
 
-const cartRouter = express.Router();
+const cartRouter = Router();
 
 cartRouter.post('/add-product', addProductToCartController);
 cartRouter.put('/update-quantity', updateProductQuantityController);

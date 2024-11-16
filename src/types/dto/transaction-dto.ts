@@ -10,6 +10,8 @@ export interface TransactionDTO {
     payment?: PaymentDTO | null;
 }
 
+
+
 export interface CreateTransactionDTO {
     userId: number;
     cartId: number;

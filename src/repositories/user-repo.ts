@@ -49,3 +49,11 @@ export const getAllUser = async () => {
         }
     })
 }
+
+export const getAdmin = async () => {
+    return prisma.user.findFirst({
+        where: {
+            role: Role.ADMIN
+        }
+    })
+}

@@ -25,7 +25,7 @@ export const addProductToCartController = async (req: Request, res: Response) =>
 export const updateProductQuantityController = async (req: Request, res: Response) => {
     try {
         const data: UpdateProductQuantityDTO = req.body;
-        data.cartId = Number(data.cartId);
+        data.id = Number(data.id);
         data.productId = Number(data.productId);
         data.quantity = Number(data.quantity);
 
@@ -58,11 +58,14 @@ export const getUserCartController = async (req: Request, res: Response) => {
 
     try {
         const cart = await cartService.getUserCart(userId);
+
+
         res.status(200).json(cart);
     } catch (error) {
         res.status(500).json({ message: "Error fetching cart", error });
     }
 };
+
 
 // Controller to get all carts
 export const getAllCartsController = async (req: Request, res: Response) => {

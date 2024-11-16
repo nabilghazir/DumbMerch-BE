@@ -22,8 +22,8 @@ model User {
 
   profile     Profile?
   Transaction Transactions[]
-  Message     Message[]
   Chat        Chat[]
+  ChatRoom    ChatRoom[]
 }
 
 model Profile {
@@ -127,10 +127,10 @@ model Payment {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
-  Transaction Transactions @relation(fields: [TransactionId], references: [id])
+  transaction Transactions @relation(fields: [TransactionId], references: [id])
 }
 
-model Chat {
+model ChatRoom {
   id Int @id @default(autoincrement())
 
   createdAt DateTime @default(now())
@@ -139,21 +139,21 @@ model Chat {
   userId  Int
   adminId Int
 
-  user    User      @relation(fields: [userId], references: [id])
-  Message Message[]
+  user User   @relation(fields: [userId], references: [id])
+  Chat Chat[]
 }
 
-model Message {
+model Chat {
   id Int @id @default(autoincrement())
 
   message   String?
   createdAt DateTime @default(now())
 
-  senderId Int
-  chatId   Int
+  senderId   Int
+  chatRoomId Int
 
-  sender User @relation(fields: [senderId], references: [id])
-  chat   Chat @relation(fields: [chatId], references: [id])
+  sender   User     @relation(fields: [senderId], references: [id])
+  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [id])
 }
 
 enum Gender {

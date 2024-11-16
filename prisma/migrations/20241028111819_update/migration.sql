@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "Profile" ALTER COLUMN "name" DROP NOT NULL,
-ALTER COLUMN "phone" SET DATA TYPE TEXT;

@@ -1,9 +1,6 @@
 import { prisma } from "../libs/prisma";
 import { CreateTransactionDTO, TransactionDTO } from "../types/dto/transaction-dto";
 
-
-
-// Create a new transaction
 export const createTransaction = async (data: CreateTransactionDTO): Promise<TransactionDTO> => {
     return await prisma.transactions.create({
         data: {
@@ -27,7 +24,6 @@ export const createTransaction = async (data: CreateTransactionDTO): Promise<Tra
     });
 };
 
-// Fetch a transaction by ID
 export const findTransactionById = async (transactionId: number): Promise<TransactionDTO | null> => {
     return await prisma.transactions.findUnique({
         where: { id: transactionId },
@@ -48,7 +44,13 @@ export const findTransactionById = async (transactionId: number): Promise<Transa
     });
 };
 
-// Fetch all transactions for a user
+export const findTransactionByCartId = async (cartId: number): Promise<TransactionDTO | null> => {
+    const transaction = await prisma.transactions.findUnique({
+        where: { cartId },
+    });
+    return transaction;
+};
+
 export const findAllTransactionsForUser = async (userId: number): Promise<TransactionDTO[]> => {
     return await prisma.transactions.findMany({
         where: { userId },
@@ -82,3 +84,23 @@ export const updateTransactionPayment = async (transactionId: number, paymentDat
         },
     });
 };
+
+export const getAllTransactions = async (): Promise<TransactionDTO[]> => {
+    return await prisma.transactions.findMany({
+        include: {
+            cart: true,
+            user: true,
+            payment: true,
+        },
+    });
+};
+
+export const sumAllTransactionsAmount = async (): Promise<number> => {
+    const sum = await prisma.transactions.aggregate({
+        _sum: {
+            totalAmount: true,
+        },
+    });
+
+    return sum._sum.totalAmount ?? 0;
+}

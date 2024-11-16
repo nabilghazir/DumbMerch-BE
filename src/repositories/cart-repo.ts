@@ -7,9 +7,11 @@ import {
     CartItemDTO,
 } from "../types/dto/cart-dto";
 
-// Create cart and optionally add an initial product
-export const createCart = async (data: CreateCartDTO, initialProduct?: AddProductToCartDTO): Promise<CartDetailsDTO> => {
-    const cart = await prisma.cart.create({
+export const createCart = async (
+    data: CreateCartDTO,
+    initialProduct?: AddProductToCartDTO
+): Promise<CartDetailsDTO> => {
+    let cart = await prisma.cart.create({
         data: { userId: data.userId },
     });
 
@@ -25,16 +27,20 @@ export const createCart = async (data: CreateCartDTO, initialProduct?: AddProduc
         });
     }
 
-    // Fetch and return the cart details
     const cartDetails = await findCartByUserId(cart.userId);
     if (!cartDetails) {
         throw new Error('Failed to fetch cart details after creation');
     }
 
-    return cartDetails; // Now guaranteed to be CartDetailsDTO
+    return {
+        id: cart.id,
+        userId: cart.userId,
+        items: cartDetails.items ?? [],
+        totalPrice: cartDetails.totalPrice ?? 0,
+    };
 };
 
-// Fetch cart by user ID and maintain the order of items
+
 export const findCartByUserId = async (userId: number): Promise<CartDetailsDTO | null> => {
     const cart = await prisma.cart.findFirst({
         where: { userId },
@@ -48,15 +54,25 @@ export const findCartByUserId = async (userId: number): Promise<CartDetailsDTO |
                     }
                 },
                 orderBy: {
-                    createdAt: 'asc' // Ensures items are ordered by the time they were added to the cart
+                    createdAt: 'asc'
                 }
             }
         },
     });
 
-    if (!cart) return null;
+    if (!cart) {
+        const create = await prisma.cart.create({
+            data: { userId },
+        })
 
-    const items: CartItemDTO[] = cart.cartItems.map((cartItem) => ({
+        if (!create) {
+            throw new Error('Failed to create cart');
+        }
+
+        return null;
+    }
+
+    const items: CartItemDTO[] = cart!.cartItems.map((cartItem) => ({
         productId: cartItem.productId,
         name: cartItem.product.name,
         price: cartItem.product.price,
@@ -66,15 +82,13 @@ export const findCartByUserId = async (userId: number): Promise<CartDetailsDTO |
     }));
 
     return {
-        cartId: cart.id,
-        userId: cart.userId,
+        id: cart!.id,
+        userId: cart!.userId,
         items,
-        totalPrice: cart.totalPrice ?? 0,
+        totalPrice: cart!.totalPrice ?? 0,
     };
 };
 
-
-// Add product to cart or update its quantity
 export const addProductToCart = async (data: AddProductToCartDTO): Promise<CartDetailsDTO | null> => {
     let cart = await prisma.cart.findFirst({
         where: { userId: data.userId },
@@ -99,26 +113,23 @@ export const addProductToCart = async (data: AddProductToCartDTO): Promise<CartD
     return calculateTotalPrice(cart.id);
 };
 
-// Update the product quantity in the cart
 export const updateProductQuantity = async (data: UpdateProductQuantityDTO): Promise<CartDetailsDTO | null> => {
     const cartProduct = await prisma.cartProduct.findUnique({
-        where: { cartId_productId: { cartId: data.cartId, productId: data.productId } },
+        where: { cartId_productId: { cartId: data.id, productId: data.productId } },
     });
 
     if (!cartProduct) {
-        throw new Error(`Product with ID ${data.productId} not found in cart ${data.cartId}`);
+        throw new Error(`Product with ID ${data.productId} not found in cart ${data.id}`);
     }
 
     await prisma.cartProduct.update({
-        where: { cartId_productId: { cartId: data.cartId, productId: data.productId } },
+        where: { cartId_productId: { cartId: data.id, productId: data.productId } },
         data: { quantity: data.quantity },
     });
 
-    // Recalculate total price after updating quantity
-    return calculateTotalPrice(data.cartId);
+    return calculateTotalPrice(data.id);
 };
 
-// Calculate the total price of the cart
 export const calculateTotalPrice = async (cartId: number): Promise<CartDetailsDTO | null> => {
     const cart = await prisma.cart.findUnique({
         where: { id: cartId },
@@ -139,7 +150,6 @@ export const calculateTotalPrice = async (cartId: number): Promise<CartDetailsDT
     return findCartByUserId(cart.userId);
 };
 
-// Clear the cart for a user
 export const clearCart = async (cartId: number): Promise<CartDetailsDTO | null> => {
     await prisma.cartProduct.deleteMany({ where: { cartId } });
     await prisma.cart.update({ where: { id: cartId }, data: { totalPrice: 0 } });
@@ -147,9 +157,9 @@ export const clearCart = async (cartId: number): Promise<CartDetailsDTO | null> 
     return findCartByUserId(cartId);
 };
 
-// Fetch cart by user ID
 export const getCartByUserId = async (userId: number): Promise<CartDetailsDTO | null> => {
-    const cart = await prisma.cart.findFirst({
+
+    let cart = await prisma.cart.findFirst({
         where: { userId },
         include: {
             cartItems: {
@@ -157,17 +167,33 @@ export const getCartByUserId = async (userId: number): Promise<CartDetailsDTO | 
                     product: {
                         include: {
                             category: true,
-                            productImages: true
-                        }
-                    }
+                            productImages: true,
+                        },
+                    },
                 },
             },
         },
     });
 
-    if (!cart) return null;
+    if (!cart) {
 
-    const items: CartItemDTO[] = cart.cartItems.map((cartItem) => ({
+
+        cart = await prisma.cart.create({
+            data: { userId },
+            include: {
+                cartItems: { include: { product: { include: { category: true, productImages: true } } } },
+            },
+        });
+
+        return {
+            id: cart.id,
+            userId: cart.userId,
+            items: [],
+            totalPrice: 0,
+        } as CartDetailsDTO;
+    }
+
+    const items: CartItemDTO[] = (cart.cartItems ?? []).map((cartItem) => ({
         productId: cartItem.productId,
         name: cartItem.product.name,
         category: cartItem.product.category.name,
@@ -178,14 +204,13 @@ export const getCartByUserId = async (userId: number): Promise<CartDetailsDTO | 
     }));
 
     return {
-        cartId: cart.id,
+        id: cart.id,
         userId: cart.userId,
         items,
         totalPrice: cart.totalPrice ?? 0,
-    };
+    } as CartDetailsDTO;
 };
 
-// Fetch all carts
 export const getAllCarts = async (): Promise<CartDetailsDTO[]> => {
     const carts = await prisma.cart.findMany({
         include: {
@@ -203,7 +228,7 @@ export const getAllCarts = async (): Promise<CartDetailsDTO[]> => {
     });
 
     return carts.map((cart) => ({
-        cartId: cart.id,
+        id: cart.id,
         userId: cart.userId,
         items: cart.cartItems.map((cartItem) => ({
             productId: cartItem.productId,

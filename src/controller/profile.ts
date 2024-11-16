@@ -1,10 +1,7 @@
-
 import { NextFunction, Request, Response } from 'express'
 import { ProfileUpdateDTO } from '../types/dto/profile-dto';
 import * as profileService from '../services/profile'
 import uploader from '../libs/cloudinary';
-
-
 
 
 export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {

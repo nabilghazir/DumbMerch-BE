@@ -47,8 +47,6 @@ export const authCheck = async (req: Request, res: Response, next: NextFunction)
     try {
         const fetchingUser = res.locals.user
 
-        console.log(fetchingUser);
-
         const profile = await authService.getProfile(fetchingUser.email)
 
         res.json(profile)

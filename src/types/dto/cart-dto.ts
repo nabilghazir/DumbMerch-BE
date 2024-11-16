@@ -9,7 +9,7 @@ export interface AddProductToCartDTO {
 }
 
 export interface UpdateProductQuantityDTO {
-    cartId: number;
+    id: number;
     productId: number;
     quantity: number;
 }
@@ -24,7 +24,7 @@ export interface CartItemDTO {
 }
 
 export interface CartDetailsDTO {
-    cartId: number;
+    id: number;
     userId: number;
     items: CartItemDTO[];
     totalPrice: number;
